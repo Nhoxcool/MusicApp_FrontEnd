@@ -3,8 +3,9 @@ import LostPassword from '@views/auth/LostPassword';
 import SignIn from '@views/auth/SignIn';
 import SignUp from '@views/auth/SignUp';
 import Verification from '@views/auth/Verification';
+import {AuthStackParamList} from 'src/@types/navigation';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 const AuthNavigator = () => {
   return (
