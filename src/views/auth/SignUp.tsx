@@ -11,6 +11,10 @@ import {NavigationProp, useNavigation} from '@react-navigation/native';
 import {AuthStackParamList} from 'src/@types/navigation';
 import {FormikHelpers} from 'formik';
 import client from 'src/api/client';
+import {isAxiosError} from 'axios';
+import catchAsyncError from 'src/api/catchError';
+import {useDispatch} from 'react-redux';
+import {upldateNotification} from 'src/store/notification';
 
 const signUpSchema = yup.object({
   name: yup
@@ -65,6 +69,7 @@ const initialValues = {
 const SignUp: FC<Props> = props => {
   const [secureEntry, setSecureEntry] = useState(true);
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
+  const dispatch = useDispatch();
 
   const togglePasswordView = () => {
     setSecureEntry(!secureEntry);
@@ -89,7 +94,8 @@ const SignUp: FC<Props> = props => {
 
       navigation.navigate('Verification', {userInfo: data.user});
     } catch (error) {
-      console.log('Đăng ký thất bại: ', error);
+      const errorMessage = catchAsyncError(error);
+      dispatch(upldateNotification({message: errorMessage, type: 'error'}));
     }
     actions.setSubmitting(false);
   };

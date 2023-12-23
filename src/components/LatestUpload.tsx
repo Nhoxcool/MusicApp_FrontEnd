@@ -1,5 +1,6 @@
-import LatestUpload from '@components/LatestUpload';
+import AudioCard from '@ui/AudioCard';
 import PulseAnimationContainer from '@ui/PulseAnimationContainer';
+import colors from '@utils/colors';
 import {FC} from 'react';
 import {
   View,
@@ -13,7 +14,7 @@ import {useFetchLatestAudios} from 'src/hooks/query';
 
 interface Props {}
 
-const Home: FC<Props> = props => {
+const LatestUpload: FC<Props> = props => {
   const {data, isLoading} = useFetchLatestAudios();
 
   if (isLoading)
@@ -25,15 +26,28 @@ const Home: FC<Props> = props => {
 
   return (
     <View style={styles.container}>
-      <LatestUpload />
+      <Text style={styles.title}>Được đăng mới nhất</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {data?.map(item => {
+          return (
+            <AudioCard key={item.id} title={item.title} poster={item.poster} />
+          );
+        })}
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 15,
+    padding: 10,
+  },
+  title: {
+    color: colors.CONTRAST,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
   },
 });
 
-export default Home;
+export default LatestUpload;
