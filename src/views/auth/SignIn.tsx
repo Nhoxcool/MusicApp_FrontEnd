@@ -14,6 +14,8 @@ import client from 'src/api/client';
 import {updateLoggedInState, updateProfile} from 'src/store/auth';
 import {useDispatch} from 'react-redux';
 import {Keys, saveToAsyncStorage} from '@utils/AsyncStorage';
+import catchAsyncError from 'src/api/catchError';
+import {upldateNotification} from 'src/store/notification';
 const signInSchema = yup.object({
   email: yup
     .string()
@@ -75,7 +77,8 @@ const SignIn: FC<Props> = props => {
       dispatch(updateProfile(data.profile));
       dispatch(updateLoggedInState(true));
     } catch (error) {
-      console.log('Đăng nhập thất bại: ', error);
+      const errorMessage = catchAsyncError(error);
+      dispatch(upldateNotification({message: errorMessage, type: 'error'}));
     }
     actions.setSubmitting(false);
   };

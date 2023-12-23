@@ -9,6 +9,9 @@ import {AuthStackParamList} from 'src/@types/navigation';
 import client from 'src/api/client';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import colors from '@utils/colors';
+import catchAsyncError from 'src/api/catchError';
+import {upldateNotification} from 'src/store/notification';
+import {useDispatch} from 'react-redux';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Verification'>;
 
@@ -21,6 +24,8 @@ const Verification: FC<Props> = ({route}) => {
   const [submitting, setSubmitting] = useState(false);
   const [countDown, setCountDown] = useState(60);
   const [canSendNewOtpRequest, setCanSendNewOtpRequest] = useState(false);
+
+  const dispatch = useDispatch();
 
   const {userInfo} = route.params;
 
@@ -53,17 +58,25 @@ const Verification: FC<Props> = ({route}) => {
   });
 
   const handleSubmit = async () => {
-    if (!isValidOtp) return;
+    if (!isValidOtp)
+      return dispatch(
+        upldateNotification({
+          message: 'Mã xác nhận không hợp lệ!',
+          type: 'error',
+        }),
+      );
     setSubmitting(true);
     try {
       const {data} = await client.post('/auth/verify-email', {
         userId: userInfo.id,
         token: otp.join(''),
       });
+      dispatch(upldateNotification({message: data.message, type: 'success'}));
       //Đi với phần đăng nhập
       navigation.navigate('SignIn');
     } catch (error) {
-      console.log('Lỗi ở phần xác thực!: ', error);
+      const errorMessage = catchAsyncError(error);
+      dispatch(upldateNotification({message: errorMessage, type: 'error'}));
     }
     setSubmitting(false);
   };
