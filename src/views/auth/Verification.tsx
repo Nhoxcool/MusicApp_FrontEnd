@@ -1,16 +1,28 @@
 import {FC, useEffect, useRef, useState} from 'react';
-import {Keyboard, StyleSheet, TextInput, View} from 'react-native';
+import {Keyboard, StyleSheet, Text, TextInput, View} from 'react-native';
 import AppLink from '@ui/AppLink';
 import AuthFormContainer from '@components/AuthFormContainer';
 import OTPField from '@ui/OTPFieild';
 import AppButton from '@ui/AppButton';
-interface Props {}
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {AuthStackParamList} from 'src/@types/navigation';
+import client from 'src/api/client';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
+import colors from '@utils/colors';
+
+type Props = NativeStackScreenProps<AuthStackParamList, 'Verification'>;
 
 const otpFields = new Array(6).fill('');
 
-const Verification: FC<Props> = props => {
+const Verification: FC<Props> = ({route}) => {
+  const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
   const [otp, setOtp] = useState([...otpFields]);
   const [activeOtpIndex, setActiveOtpIndex] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [countDown, setCountDown] = useState(60);
+  const [canSendNewOtpRequest, setCanSendNewOtpRequest] = useState(false);
+
+  const {userInfo} = route.params;
 
   const inputRef = useRef<TextInput>(null);
 
@@ -36,13 +48,61 @@ const Verification: FC<Props> = props => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log(otp);
+  const isValidOtp = otp.every(value => {
+    return value.trim();
+  });
+
+  const handleSubmit = async () => {
+    if (!isValidOtp) return;
+    setSubmitting(true);
+    try {
+      const {data} = await client.post('/auth/verify-email', {
+        userId: userInfo.id,
+        token: otp.join(''),
+      });
+      //Đi với phần đăng nhập
+      navigation.navigate('SignIn');
+    } catch (error) {
+      console.log('Lỗi ở phần xác thực!: ', error);
+    }
+    setSubmitting(false);
+  };
+
+  //yêu cầu gửi lại OTP
+  const requestForOTP = async () => {
+    setCountDown(60);
+    setCanSendNewOtpRequest(false);
+    try {
+      await client.post('/auth/re-verify-email', {
+        userId: userInfo.id,
+      });
+    } catch (error) {
+      console.log('Yêu cầu gửi lại mã xác nhận: ', error);
+    }
   };
 
   useEffect(() => {
     inputRef.current?.focus();
   }, [activeOtpIndex]);
+
+  useEffect(() => {
+    if (canSendNewOtpRequest) return;
+    const intervalId = setInterval(() => {
+      setCountDown(oldCountDown => {
+        if (oldCountDown <= 0) {
+          setCanSendNewOtpRequest(true);
+          clearInterval(intervalId);
+          return 0;
+        }
+        return oldCountDown - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [canSendNewOtpRequest]);
+
   return (
     <AuthFormContainer heading="Vui lòng kiểm tra email của bạn">
       <View style={styles.inputContainer}>
@@ -62,9 +122,16 @@ const Verification: FC<Props> = props => {
           );
         })}
       </View>
-      <AppButton title="Xác nhận" onPress={handleSubmit} />
+      <AppButton busy={submitting} title="Xác nhận" onPress={handleSubmit} />
       <View style={styles.linkContainer}>
-        <AppLink title="Gửi lại mã xác nhận" />
+        {countDown > 0 ? (
+          <Text style={styles.countDown}>{countDown} giây</Text>
+        ) : null}
+        <AppLink
+          active={canSendNewOtpRequest}
+          title="Gửi lại mã xác nhận"
+          onPress={requestForOTP}
+        />
       </View>
     </AuthFormContainer>
   );
@@ -81,7 +148,12 @@ const styles = StyleSheet.create({
   linkContainer: {
     marginTop: 20,
     width: '100%',
-    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    flexDirection: 'row',
+  },
+  countDown: {
+    color: colors.SECONDARY,
+    marginRight: 7,
   },
 });
 

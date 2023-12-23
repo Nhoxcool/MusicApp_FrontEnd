@@ -10,7 +10,7 @@ import AuthFormContainer from '@components/AuthFormContainer';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import {AuthStackParamList} from 'src/@types/navigation';
 import {FormikHelpers} from 'formik';
-import axios from 'axios';
+import client from 'src/api/client';
 
 const signUpSchema = yup.object({
   name: yup
@@ -48,7 +48,7 @@ const signUpSchema = yup.object({
 
 interface Props {}
 
-interface NewUser {
+export interface NewUser {
   name: string;
   email: string;
   password: string;
@@ -80,19 +80,18 @@ const SignUp: FC<Props> = props => {
     values: NewUser,
     actions: FormikHelpers<NewUser>,
   ) => {
+    actions.setSubmitting(true);
     try {
       const {confirmPassword, ...userData} = values;
-      const response = await axios.post(
-        'http://192.168.1.137:8989/auth/create',
-        {
-          ...userData,
-        },
-      );
+      const {data} = await client.post('/auth/create', {
+        ...userData,
+      });
 
-      console.log(response);
+      navigation.navigate('Verification', {userInfo: data.user});
     } catch (error) {
-      console.log('Đăng nhập thất bại: ', error);
+      console.log('Đăng ký thất bại: ', error);
     }
+    actions.setSubmitting(false);
   };
 
   return (
