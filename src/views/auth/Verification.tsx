@@ -5,25 +5,35 @@ import AuthFormContainer from '@components/AuthFormContainer';
 import OTPField from '@ui/OTPFieild';
 import AppButton from '@ui/AppButton';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {AuthStackParamList} from 'src/@types/navigation';
+import {
+  AuthStackParamList,
+  ProfileNavigatorStackParamList,
+} from 'src/@types/navigation';
 import client from 'src/api/client';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import colors from '@utils/colors';
 import catchAsyncError from 'src/api/catchError';
 import {upldateNotification} from 'src/store/notification';
 import {useDispatch} from 'react-redux';
+import ReVerificationLink from '@components/ReverificationLink';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'Verification'>;
+type Props = NativeStackScreenProps<
+  AuthStackParamList | ProfileNavigatorStackParamList,
+  'Verification'
+>;
+
+type PossibleScreens = {
+  ProfileSettings: undefined;
+  SignIn: undefined;
+};
 
 const otpFields = new Array(6).fill('');
 
 const Verification: FC<Props> = ({route}) => {
-  const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
+  const navigation = useNavigation<NavigationProp<PossibleScreens>>();
   const [otp, setOtp] = useState([...otpFields]);
   const [activeOtpIndex, setActiveOtpIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [countDown, setCountDown] = useState(60);
-  const [canSendNewOtpRequest, setCanSendNewOtpRequest] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -72,8 +82,17 @@ const Verification: FC<Props> = ({route}) => {
         token: otp.join(''),
       });
       dispatch(upldateNotification({message: data.message, type: 'success'}));
-      //Đi với phần đăng nhập
-      navigation.navigate('SignIn');
+      const {routeNames} = navigation.getState();
+
+      if (routeNames.includes('SignIn')) {
+        // navigate back to sign in
+        navigation.navigate('SignIn');
+      }
+
+      if (routeNames.includes('ProfileSettings')) {
+        // navigate back to ProfileSettings
+        navigation.navigate('ProfileSettings');
+      }
     } catch (error) {
       const errorMessage = catchAsyncError(error);
       dispatch(upldateNotification({message: errorMessage, type: 'error'}));
@@ -81,40 +100,9 @@ const Verification: FC<Props> = ({route}) => {
     setSubmitting(false);
   };
 
-  //yêu cầu gửi lại OTP
-  const requestForOTP = async () => {
-    setCountDown(60);
-    setCanSendNewOtpRequest(false);
-    try {
-      await client.post('/auth/re-verify-email', {
-        userId: userInfo.id,
-      });
-    } catch (error) {
-      console.log('Yêu cầu gửi lại mã xác nhận: ', error);
-    }
-  };
-
   useEffect(() => {
     inputRef.current?.focus();
   }, [activeOtpIndex]);
-
-  useEffect(() => {
-    if (canSendNewOtpRequest) return;
-    const intervalId = setInterval(() => {
-      setCountDown(oldCountDown => {
-        if (oldCountDown <= 0) {
-          setCanSendNewOtpRequest(true);
-          clearInterval(intervalId);
-          return 0;
-        }
-        return oldCountDown - 1;
-      });
-    }, 1000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [canSendNewOtpRequest]);
 
   return (
     <AuthFormContainer heading="Vui lòng kiểm tra email của bạn">
@@ -137,14 +125,7 @@ const Verification: FC<Props> = ({route}) => {
       </View>
       <AppButton busy={submitting} title="Xác nhận" onPress={handleSubmit} />
       <View style={styles.linkContainer}>
-        {countDown > 0 ? (
-          <Text style={styles.countDown}>{countDown} giây</Text>
-        ) : null}
-        <AppLink
-          active={canSendNewOtpRequest}
-          title="Gửi lại mã xác nhận"
-          onPress={requestForOTP}
-        />
+        <ReVerificationLink linkTitle="Gửi lại OTP" userId={userInfo.id} />
       </View>
     </AuthFormContainer>
   );
@@ -162,7 +143,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     width: '100%',
     justifyContent: 'flex-end',
-    flexDirection: 'row',
   },
   countDown: {
     color: colors.SECONDARY,
