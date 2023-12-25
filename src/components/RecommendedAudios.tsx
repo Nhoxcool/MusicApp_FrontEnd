@@ -1,10 +1,13 @@
+import AudioCard from '@ui/AudioCard';
 import GridView from '@ui/GridView';
 import PulseAnimationContainer from '@ui/PulseAnimationContainer';
 import colors from '@utils/colors';
 import {FC} from 'react';
 import {View, StyleSheet, Text, Image, Pressable} from 'react-native';
+import {useSelector} from 'react-redux';
 import {AudioData} from 'src/@types/audio';
 import {useFetchRecommendedAudios} from 'src/hooks/query';
+import {getPlayerState} from 'src/store/player';
 
 interface Props {
   onAudioPress(item: AudioData, data: AudioData[]): void;
@@ -12,12 +15,9 @@ interface Props {
 }
 const dummyData = new Array(6).fill('');
 
-const RecommendedAudios: FC<Props> = ({onAudioPress, onAudioLongPress}) => {
+const RecommendedAudios: FC<Props> = ({onAudioLongPress, onAudioPress}) => {
   const {data = [], isLoading} = useFetchRecommendedAudios();
-
-  const getPoster = (poster?: string) => {
-    return poster ? {uri: poster} : require('../assets/music.png');
-  };
+  const {onGoingAudio} = useSelector(getPlayerState);
 
   if (isLoading)
     return (
@@ -43,21 +43,14 @@ const RecommendedAudios: FC<Props> = ({onAudioPress, onAudioLongPress}) => {
         data={data || []}
         renderItem={item => {
           return (
-            <Pressable
-              onPress={() => {
-                onAudioPress(item, data);
-              }}
-              onLongPress={() => {
-                onAudioLongPress(item, data);
-              }}>
-              <Image source={getPoster(item.poster)} style={styles.poster} />
-              <Text
-                numberOfLines={2}
-                ellipsizeMode="tail"
-                style={styles.audioTitle}>
-                {item.title}
-              </Text>
-            </Pressable>
+            <AudioCard
+              title={item.title}
+              poster={item.poster}
+              onPress={() => onAudioPress(item, data)}
+              onLongPress={() => onAudioLongPress(item, data)}
+              containerStyle={{width: '100%'}}
+              playing={onGoingAudio?.id === item.id}
+            />
           );
         }}
       />
