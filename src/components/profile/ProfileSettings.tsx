@@ -2,14 +2,7 @@ import AppHeader from '@components/AppHeader';
 import AvatarField from '@ui/AvatarField';
 import colors from '@utils/colors';
 import {FC, useEffect, useState} from 'react';
-import {
-  View,
-  StyleSheet,
-  Text,
-  Pressable,
-  TextInput,
-  PermissionsAndroid,
-} from 'react-native';
+import {View, StyleSheet, Text, Pressable, TextInput} from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import AppButton from '@ui/AppButton';
@@ -67,7 +60,7 @@ const ProfileSettings: FC<Props> = props => {
       if (!userInfo.name.trim())
         return dispatch(
           upldateNotification({
-            message: 'Profile name is require!',
+            message: 'Tên hồ sơ là bắt buộc!',
             type: 'error',
           }),
         );
@@ -87,7 +80,7 @@ const ProfileSettings: FC<Props> = props => {
       dispatch(updateProfile(data.profile));
       dispatch(
         upldateNotification({
-          message: 'Your profile is updated.',
+          message: 'Hồ sơ của bạn đã được cập nhật thành công.',
           type: 'success',
         }),
       );
