@@ -18,7 +18,9 @@ const updateQueue = async (data: AudioData[]) => {
       id: item.id,
       title: item.title,
       url: item.file,
-      artwork: item.poster || require('../assets/music.png'),
+      artwork: item.poster
+        ? {uri: item.poster}
+        : require('../assets/music.png'),
       artist: item.owner.name,
       genre: item.category,
       isLiveStream: true,
@@ -33,19 +35,21 @@ const useAudioController = () => {
   const dispatch = useDispatch();
 
   const isPalyerReady = playbackState !== State.None;
-  const isPlaying = playbackState === State.Playing;
+  const isPalying = playbackState === State.Playing;
   const isPaused = playbackState === State.Paused;
+
   const isBusy =
     playbackState === State.Buffering || playbackState === State.Connecting;
 
   const onAudioPress = async (item: AudioData, data: AudioData[]) => {
     if (!isPalyerReady) {
+      // Playing audio for the first time.
       await updateQueue(data);
       const index = data.findIndex(audio => audio.id === item.id);
       await TrackPlayer.skip(index);
       await TrackPlayer.play();
       dispatch(updateOnGoingAudio(item));
-      return dispatch(updateOnGoingList(data));
+      dispatch(updateOnGoingList(data));
     }
 
     if (playbackState === State.Playing && onGoingAudio?.id === item.id) {
@@ -61,7 +65,6 @@ const useAudioController = () => {
 
       await TrackPlayer.pause();
       const index = data.findIndex(audio => audio.id === item.id);
-
       if (!fromSameList) {
         await TrackPlayer.reset();
         await updateQueue(data);
@@ -74,8 +77,15 @@ const useAudioController = () => {
     }
   };
 
+  const updateAidio = async () => {
+    const currentIndex = await TrackPlayer.getCurrentTrack();
+    if (currentIndex === null) return;
+
+    dispatch(updateOnGoingAudio(onGoingList[currentIndex]));
+  };
+
   const togglePlayPause = async () => {
-    if (isPlaying) await TrackPlayer.pause();
+    if (isPalying) await TrackPlayer.pause();
     if (isPaused) await TrackPlayer.play();
   };
 
@@ -83,13 +93,55 @@ const useAudioController = () => {
     await TrackPlayer.seekTo(position);
   };
 
+  const skipTo = async (sec: number) => {
+    const currentPosition = await TrackPlayer.getPosition();
+    await TrackPlayer.seekTo(currentPosition + sec);
+  };
+
+  const onNextPress = async () => {
+    const currentList = await TrackPlayer.getQueue();
+    const currentIndex = await TrackPlayer.getCurrentTrack();
+    if (currentIndex === null) return;
+
+    const nextIndex = currentIndex + 1;
+
+    const nextAudio = currentList[nextIndex];
+    if (nextAudio) {
+      await TrackPlayer.skipToNext();
+      dispatch(updateOnGoingAudio(onGoingList[nextIndex]));
+    }
+  };
+
+  const onPreviousPress = async () => {
+    const currentList = await TrackPlayer.getQueue();
+    const currentIndex = await TrackPlayer.getCurrentTrack();
+    if (currentIndex === null) return;
+
+    const preIndex = currentIndex - 1;
+
+    const nextAudio = currentList[preIndex];
+    if (nextAudio) {
+      await TrackPlayer.skipToPrevious();
+      dispatch(updateOnGoingAudio(onGoingList[preIndex]));
+    }
+  };
+
+  const setPlaybackRate = async (rate: number) => {
+    await TrackPlayer.setRate(rate);
+  };
+
   return {
     onAudioPress,
+    onNextPress,
+    onPreviousPress,
     seekTo,
     togglePlayPause,
+    setPlaybackRate,
+    skipTo,
+    updateAidio,
     isBusy,
     isPalyerReady,
-    isPlaying,
+    isPalying,
   };
 };
 

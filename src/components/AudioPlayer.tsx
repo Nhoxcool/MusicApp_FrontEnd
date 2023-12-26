@@ -3,12 +3,18 @@ import AppModal from '@ui/AppModal';
 import colors from '@utils/colors';
 import formatDuration from 'format-duration';
 import {FC} from 'react';
-import {Image, StyleSheet, Text, View} from 'react-native';
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import {useProgress} from 'react-native-track-player';
-import {useSelector} from 'react-redux';
-import {getPlayerState} from 'src/store/player';
+import {useDispatch, useSelector} from 'react-redux';
+import {getPlayerState, updatePlaybackRate} from 'src/store/player';
 import Slider from '@react-native-community/slider';
 import useAudioController from 'src/hooks/useAudioController';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import PlayPauseBtn from '@ui/PlayPauseBtn';
+import FontAwsome from 'react-native-vector-icons/FontAwesome';
+import PlayerControler from '@ui/PlayerControler';
+import Loader from '@ui/Loader';
+import PlayBackPlaySelector from '@ui/PlayBackRateSelector';
 
 interface Props {
   visible: boolean;
@@ -22,15 +28,43 @@ const formattedDuration = (duration = 0) => {
 };
 
 const AudioPlayer: FC<Props> = ({visible, onRequestClose}) => {
-  const {onGoingAudio} = useSelector(getPlayerState);
-  const {seekTo} = useAudioController();
+  const {onGoingAudio, playbackRate} = useSelector(getPlayerState);
+  const {
+    isPalying,
+    isBusy,
+    onNextPress,
+    onPreviousPress,
+    seekTo,
+    skipTo,
+    togglePlayPause,
+    setPlaybackRate,
+  } = useAudioController();
   const poster = onGoingAudio?.poster;
   const source = poster ? {uri: poster} : require('../assets/music.png');
 
   const {duration, position} = useProgress();
+  const dispatch = useDispatch();
+
+  const handleOnNextPress = async () => {
+    await onNextPress();
+  };
+
+  const handleOnPreviousPress = async () => {
+    await onPreviousPress();
+  };
 
   const updateSeek = async (value: number) => {
     await seekTo(value);
+  };
+
+  const handleSkipTo = async (skipType: 'forward' | 'reverse') => {
+    if (skipType === 'forward') await skipTo(10);
+    if (skipType === 'reverse') await skipTo(-10);
+  };
+
+  const onPlayBackRatePress = async (rate: number) => {
+    await setPlaybackRate(rate);
+    dispatch(updatePlaybackRate(rate));
   };
 
   return (
@@ -55,6 +89,59 @@ const AudioPlayer: FC<Props> = ({visible, onRequestClose}) => {
             minimumTrackTintColor={colors.INACTIVE_CONTRAST}
             value={position}
             onSlidingComplete={updateSeek}
+          />
+          <View style={styles.controles}>
+            {/* Nút lui lại bài trước */}
+            <PlayerControler onPress={handleOnPreviousPress} ignoreContainer>
+              <AntDesign
+                name="stepbackward"
+                size={24}
+                color={colors.CONTRAST}
+              />
+            </PlayerControler>
+            {/* Nút tua lại */}
+            <PlayerControler
+              onPress={() => handleSkipTo('reverse')}
+              ignoreContainer>
+              <FontAwsome
+                name="rotate-left"
+                size={18}
+                color={colors.CONTRAST}
+              />
+              <Text style={styles.skipText}>-10s</Text>
+            </PlayerControler>
+            {/* Nút chơi nút ngừng*/}
+            <PlayerControler>
+              {isBusy ? (
+                <Loader color={colors.PRIMARY} />
+              ) : (
+                <PlayPauseBtn
+                  playing={isPalying}
+                  onPress={togglePlayPause}
+                  color={colors.PRIMARY}
+                />
+              )}
+            </PlayerControler>
+            {/* Nút lui tới */}
+            <PlayerControler
+              onPress={() => handleSkipTo('forward')}
+              ignoreContainer>
+              <FontAwsome
+                name="rotate-right"
+                size={18}
+                color={colors.CONTRAST}
+              />
+              <Text style={styles.skipText}>+10s</Text>
+              {/* nút skip tới bài sau */}
+            </PlayerControler>
+            <PlayerControler onPress={handleOnNextPress} ignoreContainer>
+              <AntDesign name="stepforward" size={24} color={colors.CONTRAST} />
+            </PlayerControler>
+          </View>
+          <PlayBackPlaySelector
+            onPress={onPlayBackRatePress}
+            activeRate={playbackRate.toString()}
+            containerStyle={{marginTop: 20}}
           />
         </View>
       </View>
@@ -89,6 +176,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   duration: {
+    color: colors.CONTRAST,
+  },
+  controles: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  skipText: {
+    fontSize: 12,
+    marginTop: 2,
     color: colors.CONTRAST,
   },
 });

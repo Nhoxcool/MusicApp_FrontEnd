@@ -1,5 +1,5 @@
 import colors from '@utils/colors';
-import {FC, useState} from 'react';
+import {FC, useEffect, useState} from 'react';
 import {View, StyleSheet, Image, Text, Pressable} from 'react-native';
 import {useSelector} from 'react-redux';
 import {getPlayerState} from 'src/store/player';
@@ -8,7 +8,11 @@ import PlayPauseBtn from '@ui/PlayPauseBtn';
 import useAudioController from 'src/hooks/useAudioController';
 import Loader from '@ui/Loader';
 import {mapRange} from '@utils/math';
-import {useProgress} from 'react-native-track-player';
+import {
+  Event,
+  useProgress,
+  useTrackPlayerEvents,
+} from 'react-native-track-player';
 import AudioPlayer from './AudioPlayer';
 
 interface Props {}
@@ -17,10 +21,10 @@ export const MiniPlayerHeight = 60;
 
 const MiniAudioPlayer: FC<Props> = props => {
   const {onGoingAudio} = useSelector(getPlayerState);
-  const {isPlaying, isBusy, togglePlayPause} = useAudioController();
+  const {isPalying, isBusy, togglePlayPause, updateAidio} =
+    useAudioController();
   const progress = useProgress();
   const [playerVisibility, setPlayerVisibility] = useState(false);
-
   const poster = onGoingAudio?.poster;
   const source = poster ? {uri: poster} : require('../assets/music.png');
 
@@ -31,6 +35,12 @@ const MiniAudioPlayer: FC<Props> = props => {
   const showPlayerModal = () => {
     setPlayerVisibility(true);
   };
+
+  useEffect(() => {
+    if (progress.duration !== 0) {
+      updateAidio();
+    }
+  }, [progress.duration]);
 
   return (
     <>
@@ -64,7 +74,7 @@ const MiniAudioPlayer: FC<Props> = props => {
         {isBusy ? (
           <Loader />
         ) : (
-          <PlayPauseBtn playing={isPlaying} onPress={togglePlayPause} />
+          <PlayPauseBtn playing={isPalying} onPress={togglePlayPause} />
         )}
       </View>
 
