@@ -2,8 +2,16 @@ import AppHeader from '@components/AppHeader';
 import AvatarField from '@ui/AvatarField';
 import colors from '@utils/colors';
 import {FC, useEffect, useState} from 'react';
-import {View, StyleSheet, Text, Pressable, TextInput} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  Pressable,
+  TextInput,
+  Alert,
+} from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import MaterialComIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import AppButton from '@ui/AppButton';
 import {getClient} from 'src/api/client';
@@ -20,6 +28,7 @@ import deepEqual from 'deep-equal';
 import ImagePicker from 'react-native-image-crop-picker';
 import {Keys, removeFromAsyncStorage} from '@utils/AsyncStorage';
 import ReVerificationLink from '@components/ReverificationLink';
+import {useQueryClient} from 'react-query';
 
 interface Props {}
 interface ProfileInfo {
@@ -32,6 +41,7 @@ const ProfileSettings: FC<Props> = props => {
   const [busy, setBusy] = useState(false);
   const dispatch = useDispatch();
   const {profile} = useSelector(getAuthState);
+  const queryClient = useQueryClient();
 
   const isSame = deepEqual(userInfo, {
     name: profile?.name,
@@ -105,6 +115,49 @@ const ProfileSettings: FC<Props> = props => {
     }
   };
 
+  const clearHistory = async () => {
+    try {
+      const client = await getClient();
+      dispatch(
+        upldateNotification({
+          message: 'Lịch sử của bạn sẽ bị xóa!',
+          type: 'success',
+        }),
+      );
+      await client.delete('/history?all=yes');
+      queryClient.invalidateQueries({queryKey: ['histories']});
+    } catch (error) {
+      const errorMessage = catchAsyncError(error);
+      dispatch(upldateNotification({message: errorMessage, type: 'error'}));
+    }
+  };
+
+  const handleOnHistoryClear = () => {
+    Alert.alert(
+      'Bạn có chắc muốn xóa không!',
+      'Hành động này sẽ xóa hết lịch sử của bạn!',
+      [
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress(value) {
+            clearHistory();
+          },
+        },
+        {
+          text: 'Hủy bỏ',
+          style: 'cancel',
+          onPress(value) {
+            console.log(value);
+          },
+        },
+      ],
+      {
+        cancelable: true,
+      },
+    );
+  };
+
   useEffect(() => {
     if (profile) setUserInfo({name: profile.name, avatar: profile.avatar});
   }, [profile]);
@@ -140,19 +193,34 @@ const ProfileSettings: FC<Props> = props => {
       </View>
 
       <View style={styles.titleContainer}>
+        <Text style={styles.title}>Lịch sử</Text>
+      </View>
+
+      <View style={styles.settingOptionsContainer}>
+        <Pressable
+          onPress={handleOnHistoryClear}
+          style={styles.buttonContainer}>
+          <MaterialComIcon name="broom" size={20} color={colors.CONTRAST} />
+          <Text style={styles.buttonTitle}>Xóa tất cả</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.titleContainer}>
         <Text style={styles.title}>Đăng Xuất</Text>
       </View>
 
       <View style={styles.settingOptionsContainer}>
-        <Pressable onPress={() => handleLogout(true)} style={styles.logoutBtn}>
+        <Pressable
+          onPress={() => handleLogout(true)}
+          style={styles.buttonContainer}>
           <AntDesign name="logout" size={20} color={colors.CONTRAST} />
-          <Text style={styles.logoutBtnTitle}>
-            Đăng xuất khỏi tất cả thiết bị
-          </Text>
+          <Text style={styles.buttonTitle}>Đăng xuất khỏi tất cả thiết bị</Text>
         </Pressable>
-        <Pressable onPress={() => handleLogout()} style={styles.logoutBtn}>
+        <Pressable
+          onPress={() => handleLogout()}
+          style={styles.buttonContainer}>
           <AntDesign name="logout" size={20} color={colors.CONTRAST} />
-          <Text style={styles.logoutBtnTitle}>Đăng xuất</Text>
+          <Text style={styles.buttonTitle}>Đăng xuất</Text>
         </Pressable>
       </View>
 
@@ -219,12 +287,12 @@ const styles = StyleSheet.create({
     color: colors.CONTRAST,
     marginRight: 10,
   },
-  logoutBtn: {
+  buttonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 15,
   },
-  logoutBtnTitle: {
+  buttonTitle: {
     color: colors.CONTRAST,
     fontSize: 18,
     marginLeft: 5,

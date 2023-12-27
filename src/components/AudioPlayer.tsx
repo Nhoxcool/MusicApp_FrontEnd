@@ -2,7 +2,7 @@ import AppLink from '@ui/AppLink';
 import AppModal from '@ui/AppModal';
 import colors from '@utils/colors';
 import formatDuration from 'format-duration';
-import {FC} from 'react';
+import {FC, useState} from 'react';
 import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import {useProgress} from 'react-native-track-player';
 import {useDispatch, useSelector} from 'react-redux';
@@ -12,13 +12,16 @@ import useAudioController from 'src/hooks/useAudioController';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import PlayPauseBtn from '@ui/PlayPauseBtn';
 import FontAwsome from 'react-native-vector-icons/FontAwesome';
+import MeterialComIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import PlayerControler from '@ui/PlayerControler';
 import Loader from '@ui/Loader';
 import PlayBackPlaySelector from '@ui/PlayBackRateSelector';
+import AudioInfoContainer from './AudioInfoContainer';
 
 interface Props {
   visible: boolean;
   onRequestClose(): void;
+  onListOtpionPress?(): void;
 }
 
 const formattedDuration = (duration = 0) => {
@@ -27,7 +30,12 @@ const formattedDuration = (duration = 0) => {
   });
 };
 
-const AudioPlayer: FC<Props> = ({visible, onRequestClose}) => {
+const AudioPlayer: FC<Props> = ({
+  visible,
+  onListOtpionPress,
+  onRequestClose,
+}) => {
+  const [showAudioInfo, setShowAudioInfo] = useState(false);
   const {onGoingAudio, playbackRate} = useSelector(getPlayerState);
   const {
     isPalying,
@@ -70,6 +78,15 @@ const AudioPlayer: FC<Props> = ({visible, onRequestClose}) => {
   return (
     <AppModal animation visible={visible} onRequestClose={onRequestClose}>
       <View style={styles.container}>
+        <Pressable
+          onPress={() => setShowAudioInfo(true)}
+          style={styles.infoBtn}>
+          <AntDesign name="infocirlceo" color={colors.CONTRAST} size={24} />
+        </Pressable>
+        <AudioInfoContainer
+          visible={showAudioInfo}
+          closeHandler={setShowAudioInfo}
+        />
         <Image source={source} style={styles.poster} />
         <View style={styles.contentContainer}>
           <Text style={styles.title}>{onGoingAudio?.title}</Text>
@@ -143,6 +160,16 @@ const AudioPlayer: FC<Props> = ({visible, onRequestClose}) => {
             activeRate={playbackRate.toString()}
             containerStyle={{marginTop: 20}}
           />
+
+          <View style={styles.listOptionBtnContainer}>
+            <PlayerControler onPress={onListOtpionPress} ignoreContainer>
+              <MeterialComIcon
+                name="playlist-music"
+                size={24}
+                color={colors.CONTRAST}
+              />
+            </PlayerControler>
+          </View>
         </View>
       </View>
     </AppModal>
@@ -188,6 +215,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
     color: colors.CONTRAST,
+  },
+  infoBtn: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+  },
+  listOptionBtnContainer: {
+    alignItems: 'flex-end',
   },
 });
 
