@@ -86,7 +86,9 @@ const Selector: FC<SelectorProps> = ({value, active, onPress}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {},
+  container: {
+    marginLeft: 10,
+  },
   buttons: {
     flexDirection: 'row',
     backgroundColor: colors.OVERLAY,

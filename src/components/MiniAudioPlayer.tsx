@@ -14,6 +14,7 @@ import {
   useTrackPlayerEvents,
 } from 'react-native-track-player';
 import AudioPlayer from './AudioPlayer';
+import CurrentAudioList from './CurrentAudioList';
 
 interface Props {}
 
@@ -25,6 +26,7 @@ const MiniAudioPlayer: FC<Props> = props => {
     useAudioController();
   const progress = useProgress();
   const [playerVisibility, setPlayerVisibility] = useState(false);
+  const [showCurrentList, setShowCurrentList] = useState(false);
   const poster = onGoingAudio?.poster;
   const source = poster ? {uri: poster} : require('../assets/music.png');
 
@@ -34,6 +36,15 @@ const MiniAudioPlayer: FC<Props> = props => {
 
   const showPlayerModal = () => {
     setPlayerVisibility(true);
+  };
+
+  const handleOnCurrentListClose = () => {
+    setShowCurrentList(false);
+  };
+
+  const handleOnListOptionPress = () => {
+    showPlayerModal();
+    setShowCurrentList(true);
   };
 
   useEffect(() => {
@@ -81,6 +92,11 @@ const MiniAudioPlayer: FC<Props> = props => {
       <AudioPlayer
         visible={playerVisibility}
         onRequestClose={closePlayerModal}
+        onListOtpionPress={handleOnListOptionPress}
+      />
+      <CurrentAudioList
+        visible={showCurrentList}
+        onRequestClose={handleOnCurrentListClose}
       />
     </>
   );
