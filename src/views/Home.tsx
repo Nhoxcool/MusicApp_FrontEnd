@@ -3,22 +3,30 @@ import LatestUpload from '@components/LatestUpload';
 import OptionsModal from '@components/OptionModal';
 import PlaylistForm, {PlaylistInfo} from '@components/PlaylistForm';
 import PlayListModal from '@components/PlaylistModal';
+import RecentlyPlayed from '@components/RecentlyPlayed';
 import RecommendedAudios from '@components/RecommendedAudios';
+import RecommendedPlaylist from '@components/RecommendedPlaylist';
 import {Keys, getFromAsyncStorage} from '@utils/AsyncStorage';
 import colors from '@utils/colors';
-import {FC, useEffect, useState} from 'react';
-import {StyleSheet, Pressable, Text, ScrollView} from 'react-native';
-import TrackPlayer from 'react-native-track-player';
+import {FC, useState} from 'react';
+import {StyleSheet, Pressable, Text, ScrollView, View} from 'react-native';
 import MaterialComIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {AudioData, Playlist} from 'src/@types/audio';
 import catchAsyncError from 'src/api/catchError';
 import {getClient} from 'src/api/client';
 import {useFetchPlaylist} from 'src/hooks/query';
 import useAudioController from 'src/hooks/useAudioController';
+import {getAuthState} from 'src/store/auth';
 import {upldateNotification} from 'src/store/notification';
+import {
+  updatePlaylistVisibility,
+  updateSelectedListId,
+} from 'src/store/playlistModal';
 
-interface Props {}
+interface Props {
+  onListPress(playlist: Playlist): void;
+}
 
 const Home: FC<Props> = props => {
   const [showOptions, setShowOptions] = useState(false);
@@ -26,6 +34,7 @@ const Home: FC<Props> = props => {
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [showPlaylistForm, setShowPlaylistForm] = useState(false);
   const {onAudioPress} = useAudioController();
+  const {loggedIn} = useSelector(getAuthState);
 
   const {data} = useFetchPlaylist();
 
@@ -99,17 +108,36 @@ const Home: FC<Props> = props => {
     }
   };
 
+  const handleOnListPress = (playlist: Playlist) => {
+    dispatch(updateSelectedListId(playlist.id));
+    dispatch(updatePlaylistVisibility(true));
+  };
+
   return (
     <AppView>
       <ScrollView contentContainerStyle={styles.container}>
-        <LatestUpload
-          onAudioPress={onAudioPress}
-          onAudioLongPress={handleOnLongPress}
-        />
-        <RecommendedAudios
-          onAudioPress={onAudioPress}
-          onAudioLongPress={handleOnLongPress}
-        />
+        <View style={styles.space}>
+          <RecentlyPlayed />
+        </View>
+
+        <View style={styles.space}>
+          <LatestUpload
+            onAudioPress={onAudioPress}
+            onAudioLongPress={handleOnLongPress}
+          />
+        </View>
+
+        <View style={styles.space}>
+          <RecommendedAudios
+            onAudioPress={onAudioPress}
+            onAudioLongPress={handleOnLongPress}
+          />
+        </View>
+
+        <View style={styles.space}>
+          <RecommendedPlaylist onListPress={handleOnListPress} />
+        </View>
+
         <OptionsModal
           visible={showOptions}
           onRequestClose={() => {
@@ -168,6 +196,9 @@ const Home: FC<Props> = props => {
 const styles = StyleSheet.create({
   container: {
     padding: 10,
+  },
+  space: {
+    marginBottom: 15,
   },
   optionContainer: {
     flexDirection: 'row',

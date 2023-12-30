@@ -22,7 +22,7 @@ const RecommendedAudios: FC<Props> = ({onAudioLongPress, onAudioPress}) => {
   if (isLoading)
     return (
       <PulseAnimationContainer>
-        <View style={styles.container}>
+        <View>
           <View style={styles.dummyTitleView} />
           <GridView
             col={3}
@@ -35,8 +35,9 @@ const RecommendedAudios: FC<Props> = ({onAudioLongPress, onAudioPress}) => {
       </PulseAnimationContainer>
     );
 
+  if (!data.length) return null;
   return (
-    <View style={styles.container}>
+    <View>
       <Text style={styles.title}>Gợi ý dành cho bạn</Text>
       <GridView
         col={3}
@@ -59,9 +60,6 @@ const RecommendedAudios: FC<Props> = ({onAudioLongPress, onAudioPress}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-  },
   title: {
     color: colors.CONTRAST,
     fontSize: 20,

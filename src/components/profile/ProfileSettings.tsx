@@ -29,6 +29,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 import {Keys, removeFromAsyncStorage} from '@utils/AsyncStorage';
 import ReVerificationLink from '@components/ReverificationLink';
 import {useQueryClient} from 'react-query';
+import useAudioController from 'src/hooks/useAudioController';
 
 interface Props {}
 interface ProfileInfo {
@@ -40,6 +41,7 @@ const ProfileSettings: FC<Props> = props => {
   const [userInfo, setUserInfo] = useState<ProfileInfo>({name: ''});
   const [busy, setBusy] = useState(false);
   const dispatch = useDispatch();
+  const {StopAudio} = useAudioController();
   const {profile} = useSelector(getAuthState);
   const queryClient = useQueryClient();
 
@@ -61,6 +63,7 @@ const ProfileSettings: FC<Props> = props => {
       const errorMessage = catchAsyncError(error);
       dispatch(upldateNotification({message: errorMessage, type: 'error'}));
     }
+    StopAudio();
     dispatch(updateBusyInState(false));
   };
 

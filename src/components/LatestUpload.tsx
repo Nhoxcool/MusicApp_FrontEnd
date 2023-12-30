@@ -21,7 +21,7 @@ const LatestUpload: FC<Props> = ({onAudioPress, onAudioLongPress}) => {
   if (isLoading)
     return (
       <PulseAnimationContainer>
-        <View style={styles.container}>
+        <View>
           <View style={styles.dummyTitleView} />
           <View style={styles.dummyAudioContainer}>
             {dummyData.map((_, index) => {
@@ -33,7 +33,7 @@ const LatestUpload: FC<Props> = ({onAudioPress, onAudioLongPress}) => {
     );
 
   return (
-    <View style={styles.container}>
+    <View>
       <Text style={styles.title}>Được đăng mới nhất</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {data?.map(item => {
@@ -54,9 +54,6 @@ const LatestUpload: FC<Props> = ({onAudioPress, onAudioLongPress}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-  },
   title: {
     color: colors.CONTRAST,
     fontSize: 20,

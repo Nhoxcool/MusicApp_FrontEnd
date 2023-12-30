@@ -50,10 +50,10 @@ const useAudioController = () => {
     if (!isPalyerReady) {
       // Playing audio for the first time.
       await updateQueue(data);
+      dispatch(updateOnGoingAudio(item));
       const index = data.findIndex(audio => audio.id === item.id);
       await TrackPlayer.skip(index);
       await TrackPlayer.play();
-      dispatch(updateOnGoingAudio(item));
       dispatch(updateOnGoingList(data));
     }
 
@@ -82,11 +82,15 @@ const useAudioController = () => {
     }
   };
 
-  const updateAidio = async () => {
-    const currentIndex = await TrackPlayer.getCurrentTrack();
-    if (currentIndex === null) return;
+  const updateAudio = async (state: boolean) => {
+    if (state) {
+      const currentIndex = await TrackPlayer.getCurrentTrack();
+      if (currentIndex === null) return;
 
-    dispatch(updateOnGoingAudio(onGoingList[currentIndex]));
+      dispatch(updateOnGoingAudio(onGoingList[currentIndex]));
+    } else {
+      dispatch(updateOnGoingAudio(null));
+    }
   };
 
   const togglePlayPause = async () => {
@@ -135,6 +139,11 @@ const useAudioController = () => {
     await TrackPlayer.setRate(rate);
   };
 
+  const StopAudio = () => {
+    TrackPlayer.reset();
+    dispatch(updateOnGoingAudio(null));
+  };
+
   useEffect(() => {
     const setupPlayer = async () => {
       if (isReady) return;
@@ -166,7 +175,8 @@ const useAudioController = () => {
     togglePlayPause,
     setPlaybackRate,
     skipTo,
-    updateAidio,
+    updateAudio,
+    StopAudio,
     isBusy,
     isPalyerReady,
     isPalying,
