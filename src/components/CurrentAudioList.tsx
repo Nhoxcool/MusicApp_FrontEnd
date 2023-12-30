@@ -17,7 +17,7 @@ const CurrentAudioList: FC<Props> = ({visible, onRequestClose}) => {
     <AudioListModal
       visible={visible}
       onRequestClose={onRequestClose}
-      header="Audios on the way"
+      header="List nhạc đang phát"
       data={onGoingList}
       onItemPress={onAudioPress}
     />

@@ -16,3 +16,15 @@ export type ProfileNavigatorStackParamList = {
   ProfileSettings: undefined;
   Verification: {userInfo: NewUserResponse};
 };
+
+
+export type HomeNavigatorStackParamList = {
+  PublicProfile: {profileId: string};
+  Home: undefined;
+  Profile: undefined;
+};
+
+export type PublicProfileTabParamsList = {
+  PublicUploads: {profileId: string};
+  PublicPlaylist: {profileId: string};
+};

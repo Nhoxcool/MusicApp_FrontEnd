@@ -1,3 +1,4 @@
+import AppView from '@components/AppView';
 import CategorySelector from '@components/CategorySelector';
 import FileSelector from '@components/FileSelector';
 import AppButton from '@ui/AppButton';
@@ -120,98 +121,100 @@ const Upload: FC<Props> = props => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.fileSelctorContainer}>
-        <FileSelector
-          icon={
-            <MaterialComIcon
-              name="image-outline"
-              size={35}
-              color={colors.SECONDARY}
-            />
-          }
-          btnTitle="Select Poster"
-          options={{type: [types.images]}}
-          onSelect={poster => {
-            setAudioInfo({...audioInfo, poster});
-          }}
-        />
-        <FileSelector
-          icon={
-            <MaterialComIcon
-              name="file-music-outline"
-              size={35}
-              color={colors.SECONDARY}
-            />
-          }
-          btnTitle="Select Audio"
-          style={{marginLeft: 20}}
-          options={{type: [types.audio]}}
-          onSelect={file => {
-            setAudioInfo({...audioInfo, file});
-          }}
-        />
-      </View>
+    <AppView>
+      <ScrollView style={styles.container}>
+        <View style={styles.fileSelctorContainer}>
+          <FileSelector
+            icon={
+              <MaterialComIcon
+                name="image-outline"
+                size={35}
+                color={colors.SECONDARY}
+              />
+            }
+            btnTitle="Select Poster"
+            options={{type: [types.images]}}
+            onSelect={poster => {
+              setAudioInfo({...audioInfo, poster});
+            }}
+          />
+          <FileSelector
+            icon={
+              <MaterialComIcon
+                name="file-music-outline"
+                size={35}
+                color={colors.SECONDARY}
+              />
+            }
+            btnTitle="Select Audio"
+            style={{marginLeft: 20}}
+            options={{type: [types.audio]}}
+            onSelect={file => {
+              setAudioInfo({...audioInfo, file});
+            }}
+          />
+        </View>
 
-      <View style={styles.formContainer}>
-        <TextInput
-          placeholderTextColor={colors.INACTIVE_CONTRAST}
-          placeholder="Tiêu đề"
-          style={styles.input}
-          onChangeText={text => {
-            setAudioInfo({...audioInfo, title: text});
-          }}
-          value={audioInfo.title}
-        />
+        <View style={styles.formContainer}>
+          <TextInput
+            placeholderTextColor={colors.INACTIVE_CONTRAST}
+            placeholder="Tiêu đề"
+            style={styles.input}
+            onChangeText={text => {
+              setAudioInfo({...audioInfo, title: text});
+            }}
+            value={audioInfo.title}
+          />
 
-        <Pressable
-          onPress={() => {
-            setShowCategoryModal(true);
-          }}
-          style={styles.categorySelector}>
-          <Text style={styles.categorySelectorTitle}>Thể loại</Text>
-          <Text style={styles.selectedCategory}>{audioInfo.category}</Text>
-        </Pressable>
+          <Pressable
+            onPress={() => {
+              setShowCategoryModal(true);
+            }}
+            style={styles.categorySelector}>
+            <Text style={styles.categorySelectorTitle}>Thể loại</Text>
+            <Text style={styles.selectedCategory}>{audioInfo.category}</Text>
+          </Pressable>
 
-        <TextInput
-          placeholderTextColor={colors.INACTIVE_CONTRAST}
-          placeholder="Nội Dung"
-          style={styles.input}
-          numberOfLines={10}
-          multiline
-          onChangeText={text => {
-            setAudioInfo({...audioInfo, about: text});
-          }}
-          value={audioInfo.about}
-        />
+          <TextInput
+            placeholderTextColor={colors.INACTIVE_CONTRAST}
+            placeholder="Nội Dung"
+            style={styles.input}
+            numberOfLines={10}
+            multiline
+            onChangeText={text => {
+              setAudioInfo({...audioInfo, about: text});
+            }}
+            value={audioInfo.about}
+          />
 
-        <CategorySelector
-          visible={showCategoryModal}
-          onRequestClose={() => {
-            setShowCategoryModal(false);
-          }}
-          title="Thể loại"
-          data={categories}
-          renderItem={item => {
-            return <Text style={styles.category}>{item}</Text>;
-          }}
-          onSelect={item => {
-            setAudioInfo({...audioInfo, category: item});
-          }}
-        />
+          <CategorySelector
+            visible={showCategoryModal}
+            onRequestClose={() => {
+              setShowCategoryModal(false);
+            }}
+            title="Thể loại"
+            data={categories}
+            renderItem={item => {
+              return <Text style={styles.category}>{item}</Text>;
+            }}
+            onSelect={item => {
+              setAudioInfo({...audioInfo, category: item});
+            }}
+          />
 
-        <View style={{marginBottom: 20}} />
+          <View style={{marginBottom: 20}} />
 
-        {busy ? <Progress progress={uploadProgress} /> : null}
+          {busy ? <Progress progress={uploadProgress} /> : null}
 
-        <AppButton
-          busy={busy}
-          borderRadius={7}
-          title="Xác Nhận"
-          onPress={handleUpload}
-        />
-      </View>
-    </ScrollView>
+          <AppButton
+            busy={busy}
+            borderRadius={7}
+            title="Xác Nhận"
+            onPress={handleUpload}
+          />
+        </View>
+      </ScrollView>
+    </AppView>
   );
 };
 
