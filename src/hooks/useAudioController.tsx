@@ -6,6 +6,8 @@ import TrackPlayer, {
   State,
   AppKilledPlaybackBehavior,
   Capability,
+  RepeatMode,
+  useProgress,
 } from 'react-native-track-player';
 import {useDispatch, useSelector} from 'react-redux';
 import {AudioData} from 'src/@types/audio';
@@ -37,6 +39,7 @@ const updateQueue = async (data: AudioData[]) => {
 const useAudioController = () => {
   const playbackState = usePlaybackState();
   const {onGoingAudio, onGoingList} = useSelector(getPlayerState);
+  const progress = useProgress();
   const dispatch = useDispatch();
 
   const isPalyerReady = playbackState !== State.None;
@@ -82,17 +85,6 @@ const useAudioController = () => {
     }
   };
 
-  const updateAudio = async (state: boolean) => {
-    if (state) {
-      const currentIndex = await TrackPlayer.getCurrentTrack();
-      if (currentIndex === null) return;
-
-      dispatch(updateOnGoingAudio(onGoingList[currentIndex]));
-    } else {
-      dispatch(updateOnGoingAudio(null));
-    }
-  };
-
   const togglePlayPause = async () => {
     if (isPalying) await TrackPlayer.pause();
     if (isPaused) await TrackPlayer.play();
@@ -124,14 +116,21 @@ const useAudioController = () => {
   const onPreviousPress = async () => {
     const currentList = await TrackPlayer.getQueue();
     const currentIndex = await TrackPlayer.getCurrentTrack();
-    if (currentIndex === null) return;
 
-    const preIndex = currentIndex - 1;
+    if (currentIndex === null || currentIndex === 0) {
+      return;
+    }
 
-    const nextAudio = currentList[preIndex];
-    if (nextAudio) {
-      await TrackPlayer.skipToPrevious();
-      dispatch(updateOnGoingAudio(onGoingList[preIndex]));
+    const previousIndex = currentIndex - 1;
+    if (previousIndex >= 0 && previousIndex < currentList.length) {
+      if (progress.position != 0) {
+        await TrackPlayer.skipToPrevious();
+        await TrackPlayer.skipToPrevious();
+        dispatch(updateOnGoingAudio(onGoingList[previousIndex]));
+      } else {
+        await TrackPlayer.skipToPrevious();
+        dispatch(updateOnGoingAudio(onGoingList[previousIndex]));
+      }
     }
   };
 
@@ -142,6 +141,21 @@ const useAudioController = () => {
   const StopAudio = () => {
     TrackPlayer.reset();
     dispatch(updateOnGoingAudio(null));
+  };
+
+  const RepeatAudio = async () => {
+    await TrackPlayer.setRepeatMode(RepeatMode.Track);
+  };
+
+  const CancelRepeat = async () => {
+    await TrackPlayer.setRepeatMode(RepeatMode.Off);
+  };
+
+  const updateAudio = async () => {
+    const currentIndex = await TrackPlayer.getCurrentTrack();
+    if (currentIndex === null) return;
+
+    dispatch(updateOnGoingAudio(onGoingList[currentIndex]));
   };
 
   useEffect(() => {
@@ -177,6 +191,8 @@ const useAudioController = () => {
     skipTo,
     updateAudio,
     StopAudio,
+    RepeatAudio,
+    CancelRepeat,
     isBusy,
     isPalyerReady,
     isPalying,

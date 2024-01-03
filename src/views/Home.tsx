@@ -72,14 +72,25 @@ const Home: FC<Props> = props => {
     try {
       const token = await getFromAsyncStorage(Keys.AUTH_TOKEN);
       const client = await getClient();
-      const {data} = await client.post('/playlist/create', {
+      await client.post('/playlist/create', {
         resId: selectedAudio?.id,
         title: value.title,
         visibility: value.private ? 'private' : 'public',
       });
+      dispatch(
+        upldateNotification({
+          message: 'Playlist mới đã được tạo thành công!',
+          type: 'success',
+        }),
+      );
     } catch (error) {
       const errorMessage = catchAsyncError(error);
-      console.log(errorMessage);
+      dispatch(
+        upldateNotification({
+          message: errorMessage,
+          type: 'error',
+        }),
+      );
     }
   };
 
@@ -104,7 +115,12 @@ const Home: FC<Props> = props => {
       );
     } catch (error) {
       const errorMessage = catchAsyncError(error);
-      console.log(errorMessage);
+      dispatch(
+        upldateNotification({
+          message: errorMessage,
+          type: 'error',
+        }),
+      );
     }
   };
 
@@ -145,12 +161,12 @@ const Home: FC<Props> = props => {
           }}
           options={[
             {
-              title: 'Add to playlist',
+              title: 'Thêm vào danh sách phát',
               icon: 'playlist-music',
               onPress: handleOnAddToPlaylist,
             },
             {
-              title: 'Add to favorite',
+              title: 'Thêm vào yêu thích',
               icon: 'cards-heart',
               onPress: handleOnFavPress,
             },

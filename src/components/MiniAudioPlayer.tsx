@@ -85,12 +85,6 @@ const MiniAudioPlayer: FC<Props> = props => {
     }
   };
 
-  useEffect(() => {
-    if (progress.duration !== 0) {
-      updateAudio(true);
-    }
-  }, [progress.duration]);
-
   return (
     <>
       <View

@@ -2,7 +2,7 @@ import AppLink from '@ui/AppLink';
 import AppModal from '@ui/AppModal';
 import colors from '@utils/colors';
 import formatDuration from 'format-duration';
-import {FC, useState} from 'react';
+import {FC, useEffect, useState} from 'react';
 import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import {useProgress} from 'react-native-track-player';
 import {useDispatch, useSelector} from 'react-redux';
@@ -38,6 +38,7 @@ const AudioPlayer: FC<Props> = ({
   onProfileLinkPress,
 }) => {
   const [showAudioInfo, setShowAudioInfo] = useState(false);
+  const [repeat, SetRepeat] = useState(false);
   const {onGoingAudio, playbackRate} = useSelector(getPlayerState);
   const {
     isPalying,
@@ -48,10 +49,13 @@ const AudioPlayer: FC<Props> = ({
     skipTo,
     togglePlayPause,
     setPlaybackRate,
+    RepeatAudio,
+    CancelRepeat,
+    updateAudio,
   } = useAudioController();
   const poster = onGoingAudio?.poster;
   const source = poster ? {uri: poster} : require('../assets/music.png');
-
+  const progress = useProgress();
   const {duration, position} = useProgress();
   const dispatch = useDispatch();
 
@@ -75,6 +79,20 @@ const AudioPlayer: FC<Props> = ({
   const onPlayBackRatePress = async (rate: number) => {
     await setPlaybackRate(rate);
     dispatch(updatePlaybackRate(rate));
+  };
+
+  useEffect(() => {
+    if (progress.duration != 0) updateAudio();
+  }, [progress.duration]);
+
+  const handleRepeat = () => {
+    SetRepeat(!repeat);
+
+    if (!repeat) {
+      RepeatAudio();
+    } else if (repeat) {
+      CancelRepeat();
+    }
   };
 
   return (
@@ -154,17 +172,13 @@ const AudioPlayer: FC<Props> = ({
                 color={colors.CONTRAST}
               />
               <Text style={styles.skipText}>+10s</Text>
-              {/* nút skip tới bài sau */}
             </PlayerControler>
+
+            {/* nút skip tới bài sau */}
             <PlayerControler onPress={handleOnNextPress} ignoreContainer>
               <AntDesign name="stepforward" size={24} color={colors.CONTRAST} />
             </PlayerControler>
           </View>
-          <PlayBackPlaySelector
-            onPress={onPlayBackRatePress}
-            activeRate={playbackRate.toString()}
-            containerStyle={{marginTop: 20}}
-          />
 
           <View style={styles.listOptionBtnContainer}>
             <PlayerControler onPress={onListOtpionPress} ignoreContainer>
@@ -174,7 +188,20 @@ const AudioPlayer: FC<Props> = ({
                 color={colors.CONTRAST}
               />
             </PlayerControler>
+            {/* Nut lap lai */}
+            <PlayerControler onPress={() => handleRepeat()} ignoreContainer>
+              <FontAwsome
+                name="rotate-left"
+                size={20}
+                color={repeat ? colors.SECONDARY : colors.CONTRAST}
+              />
+            </PlayerControler>
           </View>
+          <PlayBackPlaySelector
+            onPress={onPlayBackRatePress}
+            activeRate={playbackRate.toString()}
+            containerStyle={{marginTop: 20}}
+          />
         </View>
       </View>
     </AppModal>
@@ -224,10 +251,12 @@ const styles = StyleSheet.create({
   infoBtn: {
     position: 'absolute',
     right: 10,
-    top: 10,
+    top: 32,
   },
   listOptionBtnContainer: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
   },
 });
 

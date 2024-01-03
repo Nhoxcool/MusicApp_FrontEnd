@@ -9,20 +9,26 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
+  FlatList,
 } from 'react-native';
-import {useFetchHistory} from 'src/hooks/query';
+import {fetchHistories, useFetchHistories} from 'src/hooks/query';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {getClient} from 'src/api/client';
 import {useMutation, useQueryClient} from 'react-query';
 import {History, historyAudio} from 'src/@types/audio';
 import {useNavigation} from '@react-navigation/native';
+import PulseAnimationContainer from '@ui/PulseAnimationContainer';
+import PaginatedList from '@ui/PaginatedList';
 
 interface Props {}
 
+let pageNo = 0;
 const HistoryTab: FC<Props> = props => {
-  const {data, isLoading, isFetching} = useFetchHistory();
+  const {data, isLoading, isFetching} = useFetchHistories();
   const queryClient = useQueryClient();
   const [selectedHistories, setSelectedHistories] = useState<string[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const navigation = useNavigation();
   const noData = !data?.length;
 
@@ -65,6 +71,7 @@ const HistoryTab: FC<Props> = props => {
   };
 
   const handleOnPress = (history: historyAudio) => {
+    if (selectedHistories.length === 0) return;
     setSelectedHistories(old => {
       if (old.includes(history.id)) {
         return old.filter(item => item !== history.id);
@@ -74,7 +81,34 @@ const HistoryTab: FC<Props> = props => {
     });
   };
 
+  const hanldeOnEndReached = async () => {
+    if (!data || !hasMore || isFetchingMore) return;
+
+    setIsFetchingMore(true);
+    pageNo += 1;
+    const res = await fetchHistories(pageNo);
+    if (!res || !res.length) {
+      setHasMore(false);
+    }
+    const newData = [...data, ...res];
+    const finalData: History[] = [];
+    const mergeData = newData.reduce((accumulator, current) => {
+      const foundObj = accumulator.find(item => item.date === current.date);
+      if (foundObj) {
+        foundObj.audios = foundObj.audios.concat(current.audios);
+      } else {
+        accumulator.push(current);
+      }
+      return accumulator;
+    }, finalData);
+
+    queryClient.setQueryData(['histories'], mergeData);
+    setIsFetchingMore(false);
+  };
+
   const hanldeOnRefresh = () => {
+    pageNo = 0;
+    setHasMore(true);
     queryClient.invalidateQueries({queryKey: ['histories']});
   };
 
@@ -100,15 +134,13 @@ const HistoryTab: FC<Props> = props => {
           <Text style={styles.removeBtnText}>Xóa</Text>
         </Pressable>
       ) : null}
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={isFetching} onRefresh={hanldeOnRefresh} />
-        }
-        style={styles.container}>
-        {noData ? <EmptyRecord title="Bạn chưa có lịch sử xem!" /> : null}
-        {data?.map((item, mainIndex) => {
+
+      <PaginatedList
+        data={data}
+        onEndReached={hanldeOnEndReached}
+        renderItem={({item}) => {
           return (
-            <View key={item.date + mainIndex}>
+            <View key={item.date}>
               <Text style={styles.date}>{item.date}</Text>
               <View style={styles.listContainer}>
                 {item.audios.map((audio, index) => {
@@ -142,8 +174,13 @@ const HistoryTab: FC<Props> = props => {
               </View>
             </View>
           );
-        })}
-      </ScrollView>
+        }}
+        ListEmptyComponent={<EmptyRecord title="Bạn chưa có lịch sử xem!" />}
+        refreshing={isFetching}
+        onRefresh={hanldeOnRefresh}
+        isFetching={isFetchingMore}
+        hasMore={hasMore}
+      />
     </>
   );
 };

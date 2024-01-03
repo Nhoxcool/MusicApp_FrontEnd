@@ -1,6 +1,6 @@
 import BasicModalContainer from '@ui/BasicModalContainer';
 import colors from '@utils/colors';
-import {FC, useState} from 'react';
+import {FC, useEffect, useState} from 'react';
 import {Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import MaterialComIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -11,11 +11,18 @@ export interface PlaylistInfo {
 
 interface Props {
   visible: boolean;
+  initialValue?: PlaylistInfo;
   onRequestClose(): void;
   onSubmit(value: PlaylistInfo): void;
 }
 
-const PlaylistForm: FC<Props> = ({visible, onSubmit, onRequestClose}) => {
+const PlaylistForm: FC<Props> = ({
+  visible,
+  onSubmit,
+  initialValue,
+  onRequestClose,
+}) => {
+  const [isForUpdate, setIsForUpdate] = useState(false);
   const [playlistInfo, setPlaylistInfo] = useState({
     title: '',
     private: false,
@@ -30,6 +37,13 @@ const PlaylistForm: FC<Props> = ({visible, onSubmit, onRequestClose}) => {
     setPlaylistInfo({title: '', private: false});
     onRequestClose();
   };
+
+  useEffect(() => {
+    if (initialValue) {
+      setPlaylistInfo({...initialValue});
+      setIsForUpdate(true);
+    }
+  }, [initialValue]);
 
   return (
     <BasicModalContainer visible={visible} onRequestClose={handleClose}>
@@ -57,7 +71,9 @@ const PlaylistForm: FC<Props> = ({visible, onSubmit, onRequestClose}) => {
         </Pressable>
 
         <Pressable onPress={handleSubmit} style={styles.submitButton}>
-          <Text>Tạo</Text>
+          <Text style={styles.submitBtnText}>
+            {isForUpdate ? 'Thay đổi' : 'Tạo'}
+          </Text>
         </Pressable>
       </View>
     </BasicModalContainer>
@@ -93,6 +109,9 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: colors.PRIMARY,
     borderRadius: 7,
+  },
+  submitBtnText: {
+    color: colors.PRIMARY,
   },
 });
 
