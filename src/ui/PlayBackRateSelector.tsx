@@ -30,10 +30,12 @@ const PlaybackRateSelector: FC<Props> = ({
   onPress,
 }) => {
   const [showButton, setShowButton] = useState(true);
+  const [showRage, setShowRage] = useState(false);
   const width = useSharedValue(0);
 
   const handleOnPress = () => {
     setShowButton(false);
+    setShowRage(true);
     width.value = withTiming(selectorSize * speedRates.length, {
       duration: 70,
     });
@@ -52,14 +54,18 @@ const PlaybackRateSelector: FC<Props> = ({
       ) : null}
       <Animated.View style={[styles.buttons, widthStyle]}>
         {speedRates.map(item => {
-          return (
+          return showRage ? (
             <Selector
               value={item}
               key={item}
               active={activeRate === item}
-              onPress={() => onPress && onPress(+item)}
+              onPress={() => {
+                setShowRage(false);
+                setShowButton(true);
+                return onPress && onPress(+item);
+              }}
             />
-          );
+          ) : null;
         })}
       </Animated.View>
     </View>

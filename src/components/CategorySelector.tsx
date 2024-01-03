@@ -1,14 +1,7 @@
 import BasicModalContainer from '@ui/BasicModalContainer';
 import colors from '@utils/colors';
 import {useState} from 'react';
-import {
-  View,
-  StyleSheet,
-  Modal,
-  Pressable,
-  Text,
-  ScrollView,
-} from 'react-native';
+import {StyleSheet, Pressable, Text, ScrollView} from 'react-native';
 import MaterialComIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface Props<T> {

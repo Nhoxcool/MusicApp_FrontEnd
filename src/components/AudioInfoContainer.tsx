@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   closeBtn: {
+    marginTop: 20,
     alignSelf: 'flex-end',
     width: 45,
     height: 45,

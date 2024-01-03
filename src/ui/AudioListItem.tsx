@@ -7,15 +7,24 @@ import PlayAnimation from './PlayAnimation';
 interface Props {
   audio: AudioData;
   onPress?(): void;
+  onLongPress?(): void;
   isPlaying?: boolean;
 }
 
-const AudioListItem: FC<Props> = ({audio, isPlaying = false, onPress}) => {
+const AudioListItem: FC<Props> = ({
+  audio,
+  isPlaying = false,
+  onPress,
+  onLongPress,
+}) => {
   const getSource = (poster?: string) => {
     return poster ? {uri: poster} : require('../assets/music_small.png');
   };
   return (
-    <Pressable onPress={onPress} style={styles.listItem}>
+    <Pressable
+      onLongPress={onLongPress}
+      onPress={onPress}
+      style={styles.listItem}>
       <View>
         <Image source={getSource(audio.poster)} style={styles.poster} />
         <PlayAnimation visible={isPlaying} />

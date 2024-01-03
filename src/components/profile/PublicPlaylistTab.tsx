@@ -7,6 +7,8 @@ import {Playlist} from 'src/@types/audio';
 import {PublicProfileTabParamsList} from 'src/@types/navigation';
 import {useFetchPulicPlaylist} from 'src/hooks/query';
 import {
+  updateAllowPlaylistAudioRemove,
+  updateIsPlaylistPrivate,
   updatePlaylistVisibility,
   updateSelectedListId,
 } from 'src/store/playlistModal';
@@ -20,8 +22,10 @@ const PublicPlaylistTab: FC<Props> = props => {
   const {data} = useFetchPulicPlaylist(props.route.params.profileId);
   const dispatch = useDispatch();
   const handleOnListPress = (playlist: Playlist) => {
+    dispatch(updateAllowPlaylistAudioRemove(false));
     dispatch(updateSelectedListId(playlist.id));
     dispatch(updatePlaylistVisibility(true));
+    dispatch(updateIsPlaylistPrivate(playlist.visibility === 'private'));
   };
   return (
     <ScrollView style={styles.container}>
